@@ -33,6 +33,16 @@ using namespace xn;
 #include <Commdlg.h>
 #endif
 
+//zhangxaochen:
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <ctime>
+#include <Windows.h>
+#include <sys/timeb.h>
+
+using namespace std;
+
 // --------------------------------
 // Defines
 // --------------------------------
@@ -310,6 +320,35 @@ XnStatus captureFrame()
 			}
 			else
 			{
+				{
+					//zhangxaochen: 标记实际开始时间戳
+					string begtFname = string(g_Capture.csFileName) + ".txt";
+					ofstream begtFout(begtFname);
+					XnUInt64 begt;
+#if 0	//xnOSGetTimeStamp
+					xnOSGetTimeStamp(&begt); //from程序启动时间
+					printf("begt: %llu\n", begt);
+					//begtFout.write(reinterpret_cast<const char*>(&begt), sizeof(begt));
+					begtFout << begt;
+#elif 0	//std::time
+					time_t rawtime = std::time(nullptr);
+					tm* localt = localtime(&rawtime);
+					cout << asctime(localt) << endl
+						<< rawtime << endl;
+#elif 0	//SYSTEMTIME @windows.h
+					SYSTEMTIME time;
+					GetSystemTime(&time);
+					WORD millis = time.wSecond * 1000 + time.wMilliseconds;
+					cout << millis << endl; //milliseconds within the last minute
+#elif 1	// @sys/timeb.h @windows @https://msdn.microsoft.com/library/z54t9z5f.aspx
+					struct _timeb timebuffer;
+					_ftime_s( &timebuffer ); // C4996
+					auto epocht = timebuffer.time * 1000 + timebuffer.millitm;
+					cout << epocht << endl;
+#endif //各种 time
+					begtFout << epocht;
+				}
+
 				// start recording
 				for (int i = 0; i < CAPTURE_NODE_COUNT; ++i)
 				{
