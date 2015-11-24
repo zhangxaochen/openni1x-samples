@@ -40,8 +40,10 @@ using namespace xn;
 #include <ctime>
 #include <Windows.h>
 #include <sys/timeb.h>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
+using namespace cv;
 
 // --------------------------------
 // Defines
@@ -534,9 +536,20 @@ void getDepthFileName(int num, char* csName)
 	sprintf(csName, "%s/Depth_%d.raw", CAPTURED_FRAMES_DIR_NAME, num);
 }
 
+//zhangxaochen:
+void getDepthFileImage(int num, char* csName)
+{
+	sprintf(csName, "%s/Depth_%d.png", CAPTURED_FRAMES_DIR_NAME, num);
+}
+
 void getIRFileName(int num, char* csName)
 {
 	sprintf(csName, "%s/IR_%d.raw", CAPTURED_FRAMES_DIR_NAME, num);
+}
+
+//zhangxaochen:
+void getIRFileImage(int num, char *csName){
+	sprintf(csName, "%s/IR_%d.png", CAPTURED_FRAMES_DIR_NAME, num);
 }
 
 int findUniqueFileName()
@@ -606,13 +619,33 @@ void captureSingleFrame(int)
 	const IRMetaData* pIRMD = getIRMetaData();
 	if (pIRMD != NULL)
 	{
+		//zhangxaochen:
+		//cout<<"pIRMD->DataSize: "<<pIRMD->DataSize()<<endl; //614400=640*480*2; 为什么2字节, 即 IR 是 16u
 		xnOSSaveFile(csIRFileName, pIRMD->Data(), pIRMD->DataSize());
+		Mat irMat(pIRMD->FullYRes(), pIRMD->FullXRes(), CV_16UC1, (void*)pIRMD->Data());
+		Mat irMat8u;
+		irMat.convertTo(irMat8u, CV_8UC1, 1./3);
+		//imshow("irMat8u", irMat8u); //alpha=1@convertTo 导致太亮; alpha=0.3 效果不错
+		//cout<<irMat(Rect(10, 10, 3, 3))<<endl; //val=25 etc.
+
+		XnChar csIRFileImg[XN_FILE_MAX_PATH];
+		getIRFileImage(num, csIRFileImg);
+		//imwrite(csIRFileImg, irMat); //尝试写 16u-mat, 结果太暗!
+		imwrite(csIRFileImg, irMat8u); //用于内定标, 允许损失精度
 	}
 
 	const DepthMetaData* pDepthMD = getDepthMetaData();
 	if (pDepthMD != NULL)
 	{
 		xnOSSaveFile(csDepthFileName, pDepthMD->Data(), pDepthMD->DataSize());
+		//zhangxaochen:
+		Mat dmat(pDepthMD->FullYRes(), pDepthMD->FullXRes(), CV_16UC1, (void*)pDepthMD->Data());
+		Mat dmat8u;
+		dmat.convertTo(dmat8u, CV_8UC1, UCHAR_MAX*1./1e4);
+
+		XnChar csDepthFileImg[XN_FILE_MAX_PATH];
+		getDepthFileImage(num, csDepthFileImg);
+		imwrite(csDepthFileImg, dmat8u); //用于调试观察, 允许损失精度
 	}
 	
 	g_Capture.nCapturedFrameUniqueID = num + 1;
