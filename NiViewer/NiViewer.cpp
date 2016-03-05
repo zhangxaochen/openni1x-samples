@@ -566,6 +566,9 @@ int changeDirectory(char* arg0)
 	return 0;
 }
 
+//zhangxaochen: 自定义全局变量, dirty: //2016-3-5 22:23:00
+int cropz = -1;
+
 int main(int argc, char **argv)
 {
 	XnBool bChooseDevice = false;
@@ -580,6 +583,12 @@ int main(int argc, char **argv)
 		else
 		{
 			csRecordingName = argv[1];
+
+			//zhangxaochen: 若非oni结尾，重置为NULL，即假装未初始化此参数
+			int fnLen = strlen(csRecordingName);
+			if(!(fnLen>4 && strcmp(csRecordingName+fnLen-4, ".oni")==0))
+				csRecordingName = NULL;
+
 		}
 	}
 
@@ -590,6 +599,16 @@ int main(int argc, char **argv)
 		if (0 != changeDirectory(argv[0]))
 		{
 			return(ERR_DEVICE);
+		}
+	}
+
+	//zhangxaochen: 自定义命令行参数, （argv[1] 仍按原来约定，为oni路径）
+	if(argc > 1){
+		for(size_t i=1; i< argc; i++){
+			//“按深度阈值裁剪”功能, 裁掉大于此深度阈值的像素
+			if(strcmp(argv[i], "-cropz")==0){
+				cropz = atoi(argv[i+1]);
+			}
 		}
 	}
 

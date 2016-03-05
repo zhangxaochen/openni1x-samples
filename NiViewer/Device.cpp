@@ -27,6 +27,10 @@
 #include <math.h>
 #include <XnLog.h>
 
+//zhangxaochen:
+#include <opencv2/opencv.hpp>
+using namespace cv;
+
 // --------------------------------
 // Defines
 // --------------------------------
@@ -304,6 +308,28 @@ void readFrame()
 	if (g_Depth.IsValid())
 	{
 		g_Depth.GetMetaData(g_DepthMD);
+
+		//zhangxaochen:
+		using namespace std;
+		//cout<<"cropz: "<<cropz<<endl;
+		//Mat dm(g_DepthMD.FullYRes(), g_DepthMD.FullXRes(), CV_16UC1, (void*)g_DepthMD.Data());
+// 		Mat dm(g_DepthMD.YRes(), g_DepthMD.XRes(), CV_16UC1, (void*)g_DepthMD.Data());
+// 		Mat dmat8u;
+// 		dm.convertTo(dmat8u, CV_8U, 255./1e4);
+// 		imshow("dmat8u", dmat8u);
+		
+		if(cropz > 0){
+			Mat dmat(g_DepthMD.FullYRes(), g_DepthMD.FullXRes(), CV_16UC1, (void*)g_DepthMD.WritableData());
+			Mat msk = 255*(dmat>cropz);
+			dmat.setTo(0, msk);
+// 			cout<<"msk: "<<msk.type()<<", "<<msk.depth()<<endl
+// 				<<msk(Rect(0, 0, 3, 3))<<endl;
+// 			imshow("dmat-msk", msk);
+			//waitKey(1); //不必
+
+			// 		xn::DepthMap dmap = g_DepthMD.WritableDepthMap(); //不太会用
+			// 		dmap.operator()
+		}
 	}
 
 	if (g_Image.IsValid())

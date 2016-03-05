@@ -34,6 +34,9 @@ using namespace xn;
 // --------------------------------
 #define MAX_STRINGS 20
 
+//zhangxaochen:
+extern int cropz; //@NiViewer.cpp
+
 // --------------------------------
 // Types
 // --------------------------------
